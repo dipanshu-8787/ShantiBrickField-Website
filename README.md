@@ -21,10 +21,10 @@ Welcome to the official repository of **Shanti Brick Field** — a fully respons
 
 - HTML5
 - CSS3
-- JavaScript (Vanilla)
+- JavaScript
 - PHP (Server-side)
 - PHPMailer (Email support)
-- MySQL (optional for database-based features)
+- MySQL (Database-based features)
 - Responsive Design (Mobile-Friendly)
 
 ---
