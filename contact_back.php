@@ -1,9 +1,14 @@
 
 <?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
-
 require 'PHPMailer-master/PHPMailer.php'; 
 require 'PHPMailer-master/SMTP.php';
 require 'PHPMailer-master/Exception.php';
@@ -24,6 +29,7 @@ if ($conn->connect_error) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
     
     $name = htmlspecialchars(trim($_POST['name']));
     $email = htmlspecialchars(trim($_POST['email']));
@@ -54,6 +60,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($errors)) {
         
+
+        
         $stmt = $conn->prepare("INSERT INTO contact_form (name, email, phone, message) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $name, $email, $phone, $message);
         
@@ -61,16 +69,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $mail = new PHPMailer(true);
             try {
+
                 $mail->isSMTP();
                 $mail->Host = 'smtp.gmail.com'; 
                 $mail->SMTPAuth = true;
-                $mail->Username = 'dipanshuking87@gmail.com'; 
-                $mail->Password = 'zecd ogms vpiu tdux'; 
+                
+                $mail->Username = $_ENV['EMAIL_USERNAME']; 
+
+                $mail->Password = $_ENV['EMAIL_PASSWORD']; 
+
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
 
-                $mail->setFrom('dipanshuking87@gmail.com', 'Your Name');
-                $mail->addAddress('dipanshuking87@gmail.com', 'Admin');
+                $mail->setFrom($_ENV['EMAIL_USERNAME'], 'Your Name');
+                $mail->addAddress($_ENV['EMAIL_USERNAME'], 'Admin');
                 $mail->Subject = 'New Contact Form Submission';
                 $mail->isHTML(true);
                 $mail->Body = "
@@ -87,10 +99,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $response = ["status" => "error", "message" => "Email could not be sent."];
                 }
 
-            } catch (Exception $e) {
+            } 
+            catch (Exception $e) {
                 $response = ["status" => "error", "message" => "Error: {$mail->ErrorInfo}"];
             }
-        } else {
+        }
+        else {
             $response = ["status" => "error", "message" => "Failed to store data in the database."];
         }
 

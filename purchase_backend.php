@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
@@ -7,7 +11,6 @@ require 'PHPMailer-master/PHPMailer.php';
 require 'PHPMailer-master/SMTP.php';
 require 'PHPMailer-master/Exception.php';
 
-// Database connection
 $host = "localhost"; 
 $username = "root";  
 $password = "";  
@@ -27,7 +30,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $type = trim($conn->real_escape_string($_POST['type']));
     $quantity = intval($_POST['quantity']);
 
-    // Start validating one by one
     if (empty($name)) {
         header("Location: purchase.php?success=0&error=Name+is+required");
         exit;
@@ -58,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Validate image
+    
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $fileType = mime_content_type($_FILES['payment']['tmp_name']);
     if (!in_array($fileType, $allowedTypes)) {
@@ -66,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Upload image
+    
     $paymentName = basename($_FILES['payment']['name']);
     $paymentTmp = $_FILES['payment']['tmp_name'];
     $uploadDir = 'uploads/';
@@ -76,24 +78,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $uploadedPath = $uploadDir . time() . '_' . $paymentName;
     move_uploaded_file($paymentTmp, $uploadedPath);
 
-    // Save to DB
+    
     $sql = "INSERT INTO purchase_orders (name, phone, address, type, quantity, payment_image)
             VALUES ('$name', '$phone', '$address', '$type', $quantity, '$uploadedPath')";
 
     if ($conn->query($sql) === TRUE) {
-        // Send Email
+        
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'dipanshuking87@gmail.com';
-            $mail->Password   = 'zecd ogms vpiu tdux'; // App password
+            $mail->Username = $_ENV['EMAIL_USERNAME'];
+            $mail->Password = $_ENV['EMAIL_PASSWORD'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 
-            $mail->setFrom('dipanshuking87@gmail.com', 'Shanti Brick Field');
-            $mail->addAddress('dipanshuking87@gmail.com');
+            $mail->setFrom($_ENV['EMAIL_USERNAME'], 'Shanti Brick Field');
+            $mail->addAddress($_ENV['EMAIL_USERNAME']);
             $mail->addAttachment($uploadedPath);
 
             $mail->isHTML(true);
